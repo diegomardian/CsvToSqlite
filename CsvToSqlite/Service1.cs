@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -17,17 +18,20 @@ namespace CsvToSqlite
         private String homepath;
         private String watchpath;
         public FileSystemWatcher watcher;
+        public String connString;
+        public SqlConnection conn;
         public CsvToSqlite()
         {
-            
+            this.connString = @"Data Source=(localdb)\ProjectsV13;User ID=jschlob;Password=zzaz99;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            //this.conn = new SqlConnection(this.connString);
             InitializeComponent();
-            
+
         }
 
 
         protected override void OnStart(string[] args)
         {
-            
+
 
             if (ConfigurationManager.AppSettings.Get("homepath").Equals("") &&
                 ConfigurationManager.AppSettings.Get("watchdirectory").Equals(""))
@@ -49,7 +53,7 @@ namespace CsvToSqlite
             }
             if ((!ConfigurationManager.AppSettings.Get("logginglevel").Equals("basic")) && (!ConfigurationManager.AppSettings.Get("logginglevel").Equals("complex")))
             {
-                LogToFile(DateTime.Now+ " *** Error parsing App.config \'logginglevel\', value must be set to \'basic\' or \'complex\'. Setting logginglevel to \'basic\'");
+                LogToFile(DateTime.Now + " *** Error parsing App.config \'logginglevel\', value must be set to \'basic\' or \'complex\'. Setting logginglevel to \'basic\'");
                 ConfigurationManager.AppSettings.Set("logginglevel", "basic");
             }
             this.watcher = new FileSystemWatcher(this.watchpath, "*.*");
@@ -60,17 +64,18 @@ namespace CsvToSqlite
 
 
         }
-       private void OnCreated(object source, FileSystemEventArgs e) {
+        private void OnCreated(object source, FileSystemEventArgs e)
+        {
             String filename = e.FullPath;
             String contents = File.ReadAllText(filename);
             foreach (String line in contents.Split('\n'))
             {
-                LogToFile(line.Replace("\n", "")+";");
+                LogToFile(line.Replace("\n", "") + ";");
             }
         }
 
         protected override void OnStop()
-        {       
+        {
             LogToFile(DateTime.Now + " *** CsvToSqlite service has stopped");
         }
         public void LogToFile(string Message)

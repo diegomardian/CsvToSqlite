@@ -1,1 +1,1 @@
-C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe -i C:\Users\diego\Mega\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe
+installutil.exe -i CsvToSqlite.exe
