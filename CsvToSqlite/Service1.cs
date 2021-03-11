@@ -3,27 +3,26 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Data.SQLite;
 namespace CsvToSqlite
 {
     public partial class CsvToSqlite : ServiceBase
     {
         private String homepath;
         private String watchpath;
+        private String datapath;
         public FileSystemWatcher watcher;
         public String connString;
-        public SqlConnection conn;
+        public SQLiteConnection conn;
         public CsvToSqlite()
         {
-            this.connString = @"Data Source=(localdb)\ProjectsV13;User ID=jschlob;Password=zzaz99;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-            //this.conn = new SqlConnection(this.connString);
+           
             InitializeComponent();
 
         }
@@ -31,35 +30,71 @@ namespace CsvToSqlite
 
         protected override void OnStart(string[] args)
         {
-
-
-            if (ConfigurationManager.AppSettings.Get("homepath").Equals("") &&
-                ConfigurationManager.AppSettings.Get("watchdirectory").Equals(""))
+            
+            if (ConfigurationManager.AppSettings.Get("homepath").Equals(""))
             {
-                this.watchpath = "C:\\Users\\diego\\CsvToSqlite\\Convert";
                 this.homepath = "C:\\Users\\diego\\CsvToSqlite";
                 if (!Directory.Exists(homepath))
                 {
                     Directory.CreateDirectory(homepath);
                 }
-
+            }
+            else
+            {
+                this.homepath = ConfigurationManager.AppSettings.Get("homepath");
+                if (!Directory.Exists(homepath))
+                {
+                    Directory.CreateDirectory(homepath);
+                }
+            }
+            if (ConfigurationManager.AppSettings.Get("watchdirectory").Equals(""))
+            {
+                this.watchpath = "C:\\Users\\diego\\CsvToSqlite\\Convert";
+                if (!Directory.Exists(watchpath))
+                {
+                    Directory.CreateDirectory(watchpath);
+                }
+                
+            }
+            else
+            {
+                this.watchpath = ConfigurationManager.AppSettings.Get("watchdirectory");
                 if (!Directory.Exists(watchpath))
                 {
                     Directory.CreateDirectory(watchpath);
                 }
                 ConfigurationManager.AppSettings.Set("watchdirectory", watchpath);
-                ConfigurationManager.AppSettings.Set("homepath", homepath);
 
             }
+            if (ConfigurationManager.AppSettings.Get("databasePath").Equals(""))
+            {
+                this.datapath = "C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db";
+                if (!File.Exists(datapath))  
+                {
+                    LogToFile((DateTime.Now + " Critical Error: Could not find database path: "+datapath);
+                    this.Stop();
+                }
+                
+            }
+            else
+            {
+                if (!File.Exists(ConfigurationManager.AppSettings.Get("databasePath")))
+                {
+                    this.Stop();
+                }
+                this.datapath = ConfigurationManager.AppSettings.Get("databasePath");
+            }
+            this.conn = new SQLiteConnection(ConfigurationManager.AppSettings.Get("databasePath"));
+            this.conn.Open();
             if ((!ConfigurationManager.AppSettings.Get("logginglevel").Equals("basic")) && (!ConfigurationManager.AppSettings.Get("logginglevel").Equals("complex")))
             {
-                LogToFile(DateTime.Now + " *** Error parsing App.config \'logginglevel\', value must be set to \'basic\' or \'complex\'. Setting logginglevel to \'basic\'");
+                LogToFile(DateTime.Now + " Error: Could not parse App.config key \'logginglevel\', value must be set to \'basic\' or \'complex\'. Setting logginglevel to \'basic\'");
                 ConfigurationManager.AppSettings.Set("logginglevel", "basic");
             }
             this.watcher = new FileSystemWatcher(this.watchpath, "*.*");
             watcher.Created += OnCreated;
             watcher.EnableRaisingEvents = true;
-            LogToFile(DateTime.Now + " *** CsvToSqlite service has started");
+            LogToFile(DateTime.Now + " CsvToSqlite service has started");
 
 
 
@@ -76,7 +111,9 @@ namespace CsvToSqlite
 
         protected override void OnStop()
         {
-            LogToFile(DateTime.Now + " *** CsvToSqlite service has stopped");
+            this.conn.Close();
+
+            LogToFile(DateTime.Now + " CsvToSqlite service has stopped");
         }
         public void LogToFile(string Message)
         {

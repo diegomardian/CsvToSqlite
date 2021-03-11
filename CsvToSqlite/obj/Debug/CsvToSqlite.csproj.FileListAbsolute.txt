@@ -19,3 +19,15 @@ C:\Users\diego\Mega\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.exe
 C:\Users\diego\Mega\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.pdb
 C:\Users\diego\Mega\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.CsvToSqlite.resources
 C:\Users\diego\Mega\CsvToSqlite\CsvToSqlite\bin\Debug\App.config
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\App.config
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.exe.config
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.exe
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.pdb
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.csprojAssemblyReference.cache
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.ProjectInstaller.resources
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.Properties.Resources.resources
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.CsvToSqlite.resources
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.csproj.GenerateResource.cache
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.csproj.CoreCompileInputs.cache
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.exe
+Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\obj\Debug\CsvToSqlite.pdb

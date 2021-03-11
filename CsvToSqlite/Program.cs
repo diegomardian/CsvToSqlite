@@ -19,7 +19,7 @@ namespace CsvToSqlite
             {
                 new CsvToSqlite()
             };
-            //ServiceBase.Run(ServicesToRun);
+            ServiceBase.Run(ServicesToRun);
         }
     }
 }
