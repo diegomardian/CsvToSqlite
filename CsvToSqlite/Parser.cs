@@ -11,10 +11,10 @@ namespace CsvToSqlite
     {
         public String filename;
         public String data;
-        public Parser(String filename)
+        public Parser(String filename, String data)
         {
             this.filename = filename;
-            this.data = File.ReadAllText(this.filename);
+            this.data = data;
         }
 
         public static Boolean hasDuplicate(List<String> headers)

@@ -1,0 +1,13 @@
+﻿Installing assembly 'Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.InstallLog
+   assemblypath = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.exe
+Installing service CsvToSqlite...
+Service CsvToSqlite has been successfully installed.
+Creating EventLog source CsvToSqlite in log Application...
+Committing assembly 'Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.InstallLog
+   assemblypath = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Debug\CsvToSqlite.exe

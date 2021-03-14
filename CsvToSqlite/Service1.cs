@@ -12,8 +12,6 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json;
-
 namespace CsvToSqlite
 {
     public partial class CsvToSqlite : ServiceBase
@@ -27,7 +25,6 @@ namespace CsvToSqlite
         private Dictionary<String, Object> parserConfig;
         private FileSystemWatcher watcher;
         private String connString;
-        private SQLiteConnection conn;
         private bool stopOnError;
         private EventLog eventLog;
 
@@ -192,7 +189,8 @@ namespace CsvToSqlite
             }
             
             try { 
-                this.parserConfig = JsonConvert.DeserializeObject<Dictionary<String, Object>>(File.ReadAllText(this.parserConfigFile));
+                String jsonText = File.ReadAllText(this.parserConfigFile);
+                this.parserConfig = JsonSerializer.Deserialize<Dictionary<String, Object>>(jsonText);
             }
             catch (IOException err)
             {
@@ -203,7 +201,7 @@ namespace CsvToSqlite
                 }
                 this.Stop();
             }
-            catch (Newtonsoft.Json.JsonException err)
+            catch (JsonException err)
             {
                 
                 LogToFile(DateTime.Now+" CRITICAL ERROR: An error occured while parsing "+this.parserConfigFile+". Please provide valid JSON. Quiting ...");
@@ -222,20 +220,7 @@ namespace CsvToSqlite
                 }
                 this.Stop();
             }
-            this.conn = new SQLiteConnection("Data Source=C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;");
-            try
-            {
-                this.conn.Open();
-            }
-            catch (SQLiteException err)
-            {
-                LogToFile(DateTime.Now + " CRITICAL ERROR: Could not connect to database file "+this.datapath + ".Quitting...");
-                if (!logBasic())
-                {
-                    LogToFile("Error Message\n:" + err.ToString());
-                }
-                this.Stop();
-            }
+            
 
             if (!this.parserConfig.ContainsKey("columns"))
             {
@@ -249,7 +234,7 @@ namespace CsvToSqlite
             }
             else
             {
-                if (!(this.parserConfig["stopOnError"].ToString().Equals("False")) || (this.parserConfig["stopOnError"]).ToString().Equals("True"))
+                if (!(this.parserConfig["stopOnError"].ToString().Equals("False") || this.parserConfig["stopOnError"].ToString().Equals("True")))
                 {
                     LogToFile(DateTime.Now + " ERROR: Parser config file 'stopOnError' should be either 'True' or 'False'. Setting to 'True'.");
                     this.stopOnError = true;
@@ -287,16 +272,50 @@ namespace CsvToSqlite
                 return false;
             }
         }
+
+        public void StartService()
+        {
+            this.OnStart(new string[3]);
+            Console.ReadLine();
+            this.OnStop();
+        }
+        
+
         private void OnCreated(object source, FileSystemEventArgs e)
         {
-            try { 
-                SQLiteCommand cmd = new SQLiteCommand(this.conn);
+            
+
                 String filename = e.FullPath;
-                Parser parser = new Parser(filename);
+                String fileData = null;
+                String error = "";
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        fileData = File.ReadAllText(filename);
+                        break;
+                    }
+                    catch (IOException err)
+                    {
+                        error = err.ToString();
+                    }
+                }
+                if (fileData.Equals(null))
+                {
+                    LogToFile(DateTime.Now + " ERROR: Could not read file "+ filename + ". Please make sure it exists and NETWORK SERVICE has access to it.");
+                    if (!logBasic())
+                        LogToFile("Error Message:\n" + error);
+                    return;
+                }
+                if (fileData.Equals(""))
+                {
+                    return;
+                }
+                Parser parser = new Parser(filename, fileData);
                 Dictionary<String, Object> csv = parser.Parse();
                 List<String> headers = (List<String>)csv["headers"];
                 List<List<String>> data = (List<List<String>>) csv["data"];
-                
+                var columns = JsonSerializer.Deserialize<Dictionary<String, Object>>(this.parserConfig["columns"].ToString());
                 if (Parser.hasDuplicate(headers))
                 {
                     String distinctColumns = "";
@@ -320,35 +339,42 @@ namespace CsvToSqlite
                     LogToFile(DateTime.Now + " PARSE ERROR: Found duplicates for "+ distinctColumns + ". Stopping parsing...");
                     return;
                 }
-                if (!(headers.Count == ((Dictionary<String, Object>)this.parserConfig["columns"]).Count))
+                if (!(headers.Count == columns.Count))
                 {
-                    LogToFile(DateTime.Now + " PARSE ERROR: Found " + headers.Count + " columns in the header of "+filename+" but it should have " + ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing " + filename + ".");
+                    LogToFile(DateTime.Now + " PARSE ERROR: Found " + headers.Count + " columns in the header of "+filename+" but it should have " + columns.Count + " columns. Stopped parsing " + filename + ".");
                     return;
                 }
                 for (int i = 0; i < data.Count; i++)
                 {
                     if (!(data[i].Count == headers.Count))
                     {
-                        LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ data[i].Count + " columns while it should have "+ ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing "+filename+".");
+                        LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ data[i].Count + " columns while it should have "+ columns.Count + " columns. Stopped parsing "+filename+".");
                         return;
                     }
                 }
                 for (int i = 0; i < headers.Count; i++)
                 {
-                    if (!((Dictionary<String, Object>)this.parserConfig["columns"]).ContainsKey(headers[i]))
+                    if (!columns.ContainsKey(headers[i]))
                     {
                         LogToFile(DateTime.Now+" PARSE ERROR: Column " + headers[i] + " does not match any column defined in "+this.parserConfigFile);
                         return;
                     }
                 }
+                //Dictionary<String, int> columnMapping = new Dictionary<String, int>();
+                //for (int i = 0; i < columns.Count; i++)
+                //{
+                //    columnMapping.Add(columns.ElementAt(i).Key, headers.IndexOf(columns.ElementAt(i).Key));
+                //}
                 String columnNames = "";
                 for (int i = 0; i < headers.Count; i++)
                 {
-                    if (i == headers.Count-1)
+                    if (i == headers.Count-1)  
                     {
                         columnNames += headers[i];
                     }
-                    columnNames += headers[i] + ",";
+                    else { 
+                        columnNames += headers[i] + ",";
+                    }
                 }
                 foreach (List<String> line in data)
                 {
@@ -357,35 +383,53 @@ namespace CsvToSqlite
                     {
                         if (i == line.Count-1)
                         {
-                            values += line[i];
+                            values += "'" + line[i] + "'";
                         }
                         else { 
-                            values += line[i]+",";
+                            values += "'" + line[i] + "'" + ",";
+                        }
+                        //String column = headers[i];
+                        //int index = columnMapping[column];
+                        //if (i == line.Count - 1)
+                        //{
+                        //    values += "'"+line[index]+"'";
+                        //}
+                        //else
+                        //{
+                        //    values += "'"+line[index]+"'"+ ",";
+                        //}
+                        
+                    }
+
+                    try
+                    {
+                        using (SQLiteConnection c = new SQLiteConnection("Data Source=C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;"))
+                        {
+                            c.Open();
+                            using (SQLiteCommand command = new SQLiteCommand("INSERT INTO CsvToSqlite(" + columnNames + ") VALUES(" + values + ")", c))
+                            {
+                                command.ExecuteNonQuery();
+                            }
                         }
                     }
-                    cmd.CommandText = "INSERT INTO CsvToSqlite("+columnNames+") VALUES('"+line[0]+"','"+line[1]+ "','" + line[2]+"')";
-                    cmd.ExecuteNonQuery();
+                    catch (SQLiteException err)
+                    {
+                        LogToFile(DateTime.Now + " CRITICAL ERROR: Could not connect to database " + this.datapath + ".Quitting...");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+                        this.Stop();
+                    }
+                    
 
                 }
-            }
-            catch (SQLiteException err)
-            {
-                LogToFile(DateTime.Now + " ERROR: Could not connect to database. Please make sure it is not being used by another program");
-                if (!logBasic()) {
-                    LogToFile("Error Message:\n" + err.ToString());
-                }
-            }
+           
         }
 
         protected override void OnStop()
         {
-            try
-            {
-                this.conn.Close();
-            }
-            catch (NullReferenceException err) { 
             
-            }
             LogToFile(DateTime.Now + " CsvToSqlite service has stopped");
         }
         public void LogToFile(string Message)
