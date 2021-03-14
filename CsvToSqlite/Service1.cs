@@ -135,7 +135,12 @@ namespace CsvToSqlite
             }
             catch (Newtonsoft.Json.JsonException err) { }
             {
+                LogToFile(DateTime.Now+" CRITICAL ERROR: An unexcepted error occurs while parsing parser config file "+this.parserConfigFile);
+                if (!logBasic())
+                {
 
+                }
+                this.Stop();
             }
             this.conn = new SQLiteConnection("Data Source=C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;");
             this.conn.Open();
@@ -173,10 +178,17 @@ namespace CsvToSqlite
                     for (int i = 0; i < ((List<String>)csv["headers"]).Distinct().Count(); i++) { 
                         distinctColumns += ((List<String>)csv["headers"]).Distinct().ToArray()[i]+", ";
                     }
-                    LogToFile(DateTime.Now + " PARSE ERROR: Found duplicates for columns "+ distinctColumns + ". Stopping ...");
+                    LogToFile(DateTime.Now + " PARSE ERROR: Found duplicates for columns "+ distinctColumns + ". Stopping parsing...");
                     return;
                 }
-
+                for (int i = 0; i < ((List<List<String>>)csv["data"]).Count; i++)
+                {
+                    if (!(((List<List<String>>)csv["data"])[i].Count == ((List<List<String>>)csv["header"]).Count))
+                    {
+                        LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ ((List<List<String>>)csv["data"])[i].Count + ". Stopped parsing "+filename+".");
+                        return;
+                    }
+                }
                 
                 foreach (List<String> line in (List<List<String>>)csv["data"])
                 {
