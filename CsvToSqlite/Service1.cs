@@ -22,6 +22,8 @@ namespace CsvToSqlite
         private String watchpath;
         private String datapath;
         private String parserConfigFile;
+        private String loggingLevel;
+        private String loggingDirectory;
         private Dictionary<String, Object> parserConfig;
         private FileSystemWatcher watcher;
         private String connString;
@@ -45,7 +47,22 @@ namespace CsvToSqlite
                 this.homepath = "C:\\Users\\diego\\CsvToSqlite";
                 if (!Directory.Exists(homepath))
                 {
-                    Directory.CreateDirectory(homepath);
+                    try
+                    {
+                        Directory.CreateDirectory(homepath);
+                    }
+                    catch (IOException err)
+                    {
+                        LogToFile(DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " +
+                                  this.homepath + ". Try checking the permissions of " + this.homepath +
+                                  " and make sure that Network Service has been granted access.");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+
+                        this.Stop();
+                    }
                 }
             }
             else
@@ -53,7 +70,23 @@ namespace CsvToSqlite
                 this.homepath = ConfigurationManager.AppSettings.Get("homepath");
                 if (!Directory.Exists(homepath))
                 {
-                    Directory.CreateDirectory(homepath);
+                    try
+                    {
+                        Directory.CreateDirectory(homepath);
+                    }
+                    catch (IOException err)
+                    {
+                        LogToFile(DateTime.Now +
+                                  " CRITICAL ERROR: An error occurred while creating the directory " +
+                                  this.homepath + ". Try checking the permissions of " + this.homepath +
+                                  " and make sure that Network Service has been granted access.");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+
+                        this.Stop();
+                    }
                 }
             }
             if (ConfigurationManager.AppSettings.Get("watchdirectory").Equals(""))
@@ -62,7 +95,25 @@ namespace CsvToSqlite
                 this.watchpath = "C:\\Users\\diego\\CsvToSqlite\\Convert";
                 if (!Directory.Exists(watchpath))
                 {
-                    Directory.CreateDirectory(watchpath);
+                    try
+                    {
+                        Directory.CreateDirectory(watchpath);
+                    }
+                    catch (IOException err)
+                    {
+                        LogToFile(DateTime.Now +
+                                  " CRITICAL ERROR: An error occurred while creating the directory " +
+                                  this.watchpath + ". Try checking the permissions of " + this.homepath +
+                                  " and make sure that Network Service has been granted access.");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+
+                        this.Stop();
+                    }
+
+
                 }
                 
             }
@@ -71,7 +122,24 @@ namespace CsvToSqlite
                 this.watchpath = ConfigurationManager.AppSettings.Get("watchdirectory");
                 if (!Directory.Exists(watchpath))
                 {
-                    Directory.CreateDirectory(watchpath);
+                    try
+                    {
+                        Directory.CreateDirectory(watchpath);
+                    }
+                    catch (IOException err)
+                    {
+                        LogToFile(DateTime.Now +
+                                  " CRITICAL ERROR: An error occurred while creating the directory " +
+                                  this.watchpath + ". Try checking the permissions of " + this.homepath +
+                                  " and make sure that Network Service has been granted access.");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+
+                        this.Stop();
+                    }
+
                 }
                 ConfigurationManager.AppSettings.Set("watchdirectory", watchpath);
 
@@ -80,7 +148,6 @@ namespace CsvToSqlite
             {
                 LogToFile(DateTime.Now + " CRITICAL ERROR: Config file paramater 'parserConfigFile' not set. Quiting ...");
                 this.Stop();
-                
             }
             else
             {
@@ -101,12 +168,12 @@ namespace CsvToSqlite
                     LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database path: " + datapath);
                     this.Stop();
                 }
-                
             }
             else
             {
                 if (!File.Exists(ConfigurationManager.AppSettings.Get("databasePath")))
                 {
+                    LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database file " + ConfigurationManager.AppSettings.Get("databasePath") + ".");
                     this.Stop();
                 }
                 this.datapath = ConfigurationManager.AppSettings.Get("databasePath");
@@ -115,11 +182,84 @@ namespace CsvToSqlite
             {
                 LogToFile(DateTime.Now + " ERROR: Could not parse App.config key \'logginglevel\', value must be set to \'basic\' or \'advanced\'. Setting logginglevel to \'basic\'");
                 ConfigurationManager.AppSettings.Set("logginglevel", "basic");
+                this.loggingLevel = ConfigurationManager.AppSettings.Get("logginglevel");
+            }
+            else
+            {
+                this.loggingLevel = ConfigurationManager.AppSettings.Get("logginglevel");
+            }
+            if (ConfigurationManager.AppSettings.Get("logDirectory").Equals(""))
+            {
+                LogToFile("INFO: Config file paramater 'logDirectory' not set. Setting to C:\\Users\\diego\\CsvToSqlite\\Logs");
+                this.loggingDirectory = "C:\\Users\\diego\\CsvToSqlite\\Logs";
+                if (!Directory.Exists(loggingDirectory))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(loggingDirectory);
+                    }
+                    catch (IOException err)
+                    {
+                        LogToFile(DateTime.Now +
+                                  " CRITICAL ERROR: An error occurred while creating the directory " +
+                                  this.loggingDirectory + ". Try checking the permissions of " + this.homepath +
+                                  " and make sure that Network Service has been granted access.");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+
+                        this.Stop();
+                    }
+
+
+                }
+
+            }
+            else
+            {
+                this.loggingDirectory = ConfigurationManager.AppSettings.Get("loggingDirectory");
+                if (!Directory.Exists(loggingDirectory))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(loggingDirectory);
+                    }
+                    catch (IOException err)
+                    {
+                        LogToFile(DateTime.Now +
+                                  " CRITICAL ERROR: An error occurred while creating the directory " +
+                                  this.loggingDirectory + ". Try checking the permissions of " + this.homepath +
+                                  " and make sure that Network Service has been granted access.");
+                        if (!logBasic())
+                        {
+                            LogToFile("Error Message\n:" + err.ToString());
+                        }
+
+                        this.Stop();
+                    }
+
+                }
+
             }
             if (Directory.Exists(this.homepath + "\\Logs"))
             {
                 LogToFile("INFO: Creating " + this.homepath + "\\Logs");
-                Directory.CreateDirectory(this.homepath + "\\Logs");
+                try
+                {
+                    Directory.CreateDirectory(this.homepath + "\\Logs");
+                }
+                catch (IOException err)
+                {
+                    LogToFile(DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.homepath + "\\Logs. Try checking the permissions of "+ this.homepath+" and make sure that Network Service has been granted access.");
+                    if (!logBasic())
+                    {
+                        LogToFile("Error Message\n:" + err.ToString());
+                    }
+                    this.Stop();
+                }
+
+
             }
             try { 
                 this.parserConfig = JsonConvert.DeserializeObject<Dictionary<String, Object>>(File.ReadAllText(this.parserConfigFile));
@@ -143,7 +283,21 @@ namespace CsvToSqlite
                 this.Stop();
             }
             this.conn = new SQLiteConnection("Data Source=C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;");
-            this.conn.Open();
+            try
+            {
+                this.conn.Open();
+            }
+            catch (SQLiteException err)
+            {
+                LogToFile(DateTime.Now + " CRITICAL ERROR: Could not connect to database file "+this.datapath + ".Quitting...");
+                if (!logBasic())
+                {
+                    LogToFile("Error Message\n:" + err.ToString());
+                }
+                this.Stop();
+            }
+
+          
             
             this.watcher = new FileSystemWatcher(this.watchpath, "*.*");
             watcher.Created += OnCreated;
