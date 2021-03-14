@@ -29,11 +29,14 @@ namespace CsvToSqlite
         private String connString;
         private SQLiteConnection conn;
         private bool stopOnError;
+        private EventLog eventLog;
 
         public CsvToSqlite()
         {
-           
+            eventLog = new System.Diagnostics.EventLog();
+            eventLog.Source = "CsvToSqlite";
             InitializeComponent();
+
 
         }
 
@@ -151,13 +154,12 @@ namespace CsvToSqlite
             }
             else
             {
-                this.parserConfigFile = ConfigurationManager.AppSettings.Get("watchdirectory");
-                if (!Directory.Exists(this.parserConfigFile))
+                this.parserConfigFile = ConfigurationManager.AppSettings.Get("parserConfigFile");
+                if (!File.Exists(this.parserConfigFile))
                 {
                     LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find file " + this.parserConfigFile+". Quiting ...");
-
+                    this.Stop();
                 }
-                ConfigurationManager.AppSettings.Set("watchdirectory", watchpath);
 
             }
             if (ConfigurationManager.AppSettings.Get("databasePath").Equals(""))
@@ -194,19 +196,29 @@ namespace CsvToSqlite
             }
             catch (IOException err)
             {
-                LogToFile(DateTime.Now + " CRITICAL ERROR: Could not read "+this.parserConfigFile);
+                LogToFile(DateTime.Now + " CRITICAL ERROR: Could not read "+this.parserConfigFile+". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
                 if (!logBasic())
                 {
                     LogToFile("Error Message\n:" + err.ToString());
                 }
                 this.Stop();
             }
-            catch (Newtonsoft.Json.JsonException err) { }
+            catch (Newtonsoft.Json.JsonException err)
             {
-                LogToFile(DateTime.Now+" CRITICAL ERROR: An unexcepted error occurs while parsing parser config file "+this.parserConfigFile);
+                
+                LogToFile(DateTime.Now+" CRITICAL ERROR: An error occured while parsing "+this.parserConfigFile+". Please provide valid JSON. Quiting ...");
                 if (!logBasic())
                 {
-
+                    LogToFile("Error Message:\n"+ err.ToString());
+                }
+                this.Stop();
+            }
+            catch (System.UnauthorizedAccessException err)
+            {
+                LogToFile(DateTime.Now + " CRITICAL ERROR: NETWORK SERVICE does not have permissions to access "+this.parserConfigFile+ ". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
+                if (!logBasic())
+                {
+                    LogToFile("Error Message:\n" + err.ToString());
                 }
                 this.Stop();
             }
@@ -242,6 +254,17 @@ namespace CsvToSqlite
                     LogToFile(DateTime.Now + " ERROR: Parser config file 'stopOnError' should be either 'True' or 'False'. Setting to 'True'.");
                     this.stopOnError = true;
                 }
+                else
+                {
+                    if (this.parserConfig["stopOnError"].ToString().Equals("False"))
+                    {
+                        this.stopOnError = false;
+                    }
+                    else
+                    {
+                        this.stopOnError = true;
+                    }
+                }
             }
 
 
@@ -271,59 +294,60 @@ namespace CsvToSqlite
                 String filename = e.FullPath;
                 Parser parser = new Parser(filename);
                 Dictionary<String, Object> csv = parser.Parse();
+                List<String> headers = (List<String>)csv["headers"];
                 
-                if (Parser.hasDuplicate((List<String>)csv["headers"]))
+                if (Parser.hasDuplicate(headers))
                 {
                     String distinctColumns = "";
-                    if (((List<String>)csv["headers"]).Distinct().Count() == 1)
+                    if (headers.Distinct().Count() == 1)
                     {
-                        distinctColumns = "column " + ((List<String>)csv["headers"]).Distinct().ToArray()[0];
+                        distinctColumns = "column " + headers.Distinct().ToArray()[0];
                     }
                     else if (((List<String>)csv["headers"]).Distinct().Count() == 2)
                     {
-                        distinctColumns += "columns " + ((List<String>)csv["headers"]).Distinct().ToArray()[0] + " and " + ((List<String>)csv["headers"]).Distinct().ToArray()[1];
+                        distinctColumns += "columns " + headers.Distinct().ToArray()[0] + " and " + headers.Distinct().ToArray()[1];
                     }
                     else { 
                         distinctColumns += "columns ";
-                        for (int i = 0; i < ((List<String>)csv["headers"]).Distinct().Count(); i++) { 
-                            if (i == ((List<String>)csv["headers"]).Distinct().Count()-1)
-                                distinctColumns += "and "+((List<String>)csv["headers"]).Distinct().ToArray()[i];
+                        for (int i = 0; i < headers.Distinct().Count(); i++) { 
+                            if (i == headers.Distinct().Count()-1)
+                                distinctColumns += "and "+headers.Distinct().ToArray()[i];
                             else
-                                distinctColumns += ((List<String>)csv["headers"]).Distinct().ToArray()[i]+", ";
+                                distinctColumns += headers.Distinct().ToArray()[i]+", ";
                         }
                     }
                     LogToFile(DateTime.Now + " PARSE ERROR: Found duplicates for "+ distinctColumns + ". Stopping parsing...");
                     return;
                 }
-                if (!(((List<String>)csv["headers"]).Count == ((Dictionary<String, Object>)this.parserConfig["columns"]).Count))
+                if (!(headers.Count == ((Dictionary<String, Object>)this.parserConfig["columns"]).Count))
                 {
-                    LogToFile(DateTime.Now + " PARSE ERROR: Found " + ((List<String>)csv["headers"]).Count + " columns in the header of "+filename+" but it should have " + ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing " + filename + ".");
+                    LogToFile(DateTime.Now + " PARSE ERROR: Found " + (headers.Count + " columns in the header of "+filename+" but it should have " + ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing " + filename + ".");
                     return;
                 }
                 for (int i = 0; i < ((List<List<String>>)csv["data"]).Count; i++)
                 {
-                    if (!(((List<List<String>>)csv["data"])[i].Count == ((List<String>)csv["headers"]).Count))
+                    if (!(((List<List<String>>)csv["data"])[i].Count == headers.Count))
                     {
                         LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ ((List<List<String>>)csv["data"])[i].Count + " columns while it should have "+ ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing "+filename+".");
                         return;
                     }
                 }
-                for (int i = 0; i < ((List<String>)csv["headers"]).Count; i++)
+                for (int i = 0; i < headers.Count; i++)
                 {
-                    if (!((Dictionary<String, Object>)this.parserConfig["columns"]).ContainsKey(((List<String>)csv["headers"])[i]))
+                    if (!((Dictionary<String, Object>)this.parserConfig["columns"]).ContainsKey(headers[i]))
                     {
                         LogToFile(DateTime.Now+" PARSE ERROR: Column " + ((List<String>)csv["header"])[i] + " does not match any column defined in "+this.parserConfigFile);
                         return;
                     }
                 }
                 String columnNames = "";
-                for (int i = 0; i < ((List<String>)csv["headers"]).Count; i++)
+                for (int i = 0; i < headers.Count; i++)
                 {
-                    if (i == ((List<String>)csv["headers"]).Count-1)
+                    if (i == headers.Count-1)
                     {
-                        columnNames += ((List<String>)csv["headers"])[i];
+                        columnNames += headers[i];
                     }
-                    columnNames += ((List<String>)csv["headers"])[i] + ",";
+                    columnNames += headers[i] + ",";
                 }
                 foreach (List<String> line in (List<List<String>>)csv["data"])
                 {
@@ -354,63 +378,101 @@ namespace CsvToSqlite
 
         protected override void OnStop()
         {
-            this.conn.Close();
-
+            try
+            {
+                this.conn.Close();
+            }
+            catch (NullReferenceException err) { 
+            
+            }
             LogToFile(DateTime.Now + " CsvToSqlite service has stopped");
         }
         public void LogToFile(string Message)
         {
-            if (ConfigurationManager.AppSettings.Get("logDirectory").Equals("") && this.loggingDirectory.Equals(""))
+            if (this.loggingDirectory.Equals(""))
             {
-                this.loggingDirectory = "C:\\Users\\diego\\CsvToSqlite\\Logs";
-                if (!Directory.Exists(loggingDirectory))
+                if (ConfigurationManager.AppSettings.Get("logDirectory").Equals("") && this.loggingDirectory.Equals(""))
                 {
-                    try
+                    eventLog.WriteEntry("INFO: Config file 'logDirectory' is not set. Setting to C:\\Users\\diego\\CsvToSqlite\\Logs");
+                    this.loggingDirectory = "C:\\Users\\diego\\CsvToSqlite\\Logs";
+                    if (!Directory.Exists(loggingDirectory))
                     {
-                        Directory.CreateDirectory(loggingDirectory);
-                    }
-                    catch (IOException err)
-                    {
-                        
+                        try
+                        {
+                            Directory.CreateDirectory(loggingDirectory);
+                        }
+                        catch (Exception err)
+                        {
+                            eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the defualt log directory "+ "C:\\Users\\diego\\CsvToSqlite\\Logs" + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                            this.Stop();
+                        }
 
-                        this.Stop();
-                    }
 
-
-                }
-
-            }
-            else
-            {
-                this.loggingDirectory = ConfigurationManager.AppSettings.Get("loggingDirectory");
-                if (!Directory.Exists(loggingDirectory))
-                {
-                    try
-                    {
-                        Directory.CreateDirectory(loggingDirectory);
-                    }
-                    catch (IOException err)
-                    {
-                        this.Stop();
                     }
 
                 }
+                else
+                {
+                    this.loggingDirectory = ConfigurationManager.AppSettings.Get("loggingDirectory");
+                    if (!Directory.Exists(loggingDirectory))
+                    {
+                        eventLog.WriteEntry("INFO: Could not find log directory "+this.loggingDirectory+". Attempting to create it.");
+                        try
+                        {
+                            Directory.CreateDirectory(loggingDirectory);
+                        }
+                        catch (Exception err)
+                        {
+                            eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                            this.Stop();
+                        }
 
+                    }
+
+                }
             }
-            string filepath = this.loggingDirectory;
+            if (!Directory.Exists(this.loggingDirectory))
+            {
+                eventLog.WriteEntry("INFO: "+this.loggingDirectory+" does not exist. Attemping to create it.");
+                try
+                {
+                    Directory.CreateDirectory(loggingDirectory);
+                }
+                catch (Exception err)
+                {
+                    eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                    this.Stop();
+                }
+                
+            }
+            string filepath = this.loggingDirectory + "\\log.txt";
             if (!File.Exists(filepath))
             {
                 using (StreamWriter sw = File.CreateText(filepath))
                 {
-                    sw.WriteLine(Message);
+                    try { 
+                        sw.WriteLine(Message);
+                    }
+                    catch (Exception err)
+                    {
+                        eventLog.WriteEntry("ERROR: An unexpected error occured while creating the log file " + filepath + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                    }
                 }
             }
             else
             {
-                using (StreamWriter sw = File.AppendText(filepath))
+                try
                 {
-                    sw.WriteLine(Message);
+                    using (StreamWriter sw = File.AppendText(filepath))
+                    {
+                        sw.WriteLine(Message);
+                    }
                 }
+                catch (Exception err)
+                {
+                   eventLog.WriteEntry("ERROR: An unexpected error occured while wriing the log file " + filepath + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                }
+                
             }
         }
     }
