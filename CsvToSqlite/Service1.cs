@@ -295,6 +295,7 @@ namespace CsvToSqlite
                 Parser parser = new Parser(filename);
                 Dictionary<String, Object> csv = parser.Parse();
                 List<String> headers = (List<String>)csv["headers"];
+                List<List<String>> data = (List<List<String>>) csv["data"];
                 
                 if (Parser.hasDuplicate(headers))
                 {
@@ -303,7 +304,7 @@ namespace CsvToSqlite
                     {
                         distinctColumns = "column " + headers.Distinct().ToArray()[0];
                     }
-                    else if (((List<String>)csv["headers"]).Distinct().Count() == 2)
+                    else if (headers.Distinct().Count() == 2)
                     {
                         distinctColumns += "columns " + headers.Distinct().ToArray()[0] + " and " + headers.Distinct().ToArray()[1];
                     }
@@ -321,14 +322,14 @@ namespace CsvToSqlite
                 }
                 if (!(headers.Count == ((Dictionary<String, Object>)this.parserConfig["columns"]).Count))
                 {
-                    LogToFile(DateTime.Now + " PARSE ERROR: Found " + (headers.Count + " columns in the header of "+filename+" but it should have " + ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing " + filename + ".");
+                    LogToFile(DateTime.Now + " PARSE ERROR: Found " + headers.Count + " columns in the header of "+filename+" but it should have " + ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing " + filename + ".");
                     return;
                 }
-                for (int i = 0; i < ((List<List<String>>)csv["data"]).Count; i++)
+                for (int i = 0; i < data.Count; i++)
                 {
-                    if (!(((List<List<String>>)csv["data"])[i].Count == headers.Count))
+                    if (!(data[i].Count == headers.Count))
                     {
-                        LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ ((List<List<String>>)csv["data"])[i].Count + " columns while it should have "+ ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing "+filename+".");
+                        LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ data[i].Count + " columns while it should have "+ ((Dictionary<String, Object>)this.parserConfig["columns"]).Count + " columns. Stopped parsing "+filename+".");
                         return;
                     }
                 }
@@ -336,7 +337,7 @@ namespace CsvToSqlite
                 {
                     if (!((Dictionary<String, Object>)this.parserConfig["columns"]).ContainsKey(headers[i]))
                     {
-                        LogToFile(DateTime.Now+" PARSE ERROR: Column " + ((List<String>)csv["header"])[i] + " does not match any column defined in "+this.parserConfigFile);
+                        LogToFile(DateTime.Now+" PARSE ERROR: Column " + headers[i] + " does not match any column defined in "+this.parserConfigFile);
                         return;
                     }
                 }
@@ -349,7 +350,7 @@ namespace CsvToSqlite
                     }
                     columnNames += headers[i] + ",";
                 }
-                foreach (List<String> line in (List<List<String>>)csv["data"])
+                foreach (List<String> line in data)
                 {
                     String values = "";
                     for (int i = 0; i < line.Count; i++)
