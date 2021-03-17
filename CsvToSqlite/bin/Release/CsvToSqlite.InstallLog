@@ -1271,3 +1271,18 @@ Affected parameters are:
    logfile = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog
    assemblypath = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe
    logtoconsole = 
+Installing assembly 'Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe'.
+Affected parameters are:
+   i = 
+   logfile = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog
+   assemblypath = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe
+   logtoconsole = 
+Installing service CsvToSqlite...
+Service CsvToSqlite has been successfully installed.
+Creating EventLog source CsvToSqlite in log Application...
+Committing assembly 'Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe'.
+Affected parameters are:
+   i = 
+   logfile = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog
+   assemblypath = Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe
+   logtoconsole = 

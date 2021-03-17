@@ -54,7 +54,7 @@ namespace CsvToSqlite
             Boolean escaping = false;
             char quoteChar = ' ';
             Boolean quoting = false;
-            int lastCloseQuoteIndex = -2147483648;
+            int lastCloseQuoteIndex = int.MinValue;
             StringBuilder current = new StringBuilder();
             for (int i = 0; i < line.Length; i++)
             {
