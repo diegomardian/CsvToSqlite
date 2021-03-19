@@ -38,6 +38,28 @@ namespace CsvToSqlite
 
 
         }
+        private void ShowErrors(Exception err, String message) 
+        {
+            LogToFile(message);
+            if (!logBasic())
+                LogToFile("Error Message:\n" + err.ToString());
+        }
+        private void CreateDirectory(String dir, String message)
+        {
+            try
+            {
+                Directory.CreateDirectory(dir);
+            }
+            catch (IOException err)
+            {
+                ShowErrors(err, message);
+                this.Stop();
+            }
+            catch (UnauthorizedAccessException err)
+            {
+                LogToFile(message);
+            }
+        }
 
 
         protected override void OnStart(string[] args)
@@ -49,22 +71,7 @@ namespace CsvToSqlite
                 this.homepath = "C:\\Users\\diego\\CsvToSqlite";
                 if (!Directory.Exists(homepath))
                 {
-                    try
-                    {
-                        Directory.CreateDirectory(homepath);
-                    }
-                    catch (IOException err)
-                    {
-                        LogToFile(DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " +
-                                  this.homepath + ". Try checking the permissions of " + this.homepath +
-                                  " and make sure that Network Service has been granted access.");
-                        if (!logBasic())
-                        {
-                            LogToFile("Error Message\n:" + err.ToString());
-                        }
-
-                        this.Stop();
-                    }
+                    CreateDirectory(this.homepath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.homepath + ". Try checking the permissions of " + this.homepath + " and make sure that NETWORK SERVICE has been granted access.");
                 }
             }
             else
@@ -72,23 +79,7 @@ namespace CsvToSqlite
                 this.homepath = ConfigurationManager.AppSettings.Get("homepath");
                 if (!Directory.Exists(homepath))
                 {
-                    try
-                    {
-                        Directory.CreateDirectory(homepath);
-                    }
-                    catch (IOException err)
-                    {
-                        LogToFile(DateTime.Now +
-                                  " CRITICAL ERROR: An error occurred while creating the directory " +
-                                  this.homepath + ". Try checking the permissions of " + this.homepath +
-                                  " and make sure that Network Service has been granted access.");
-                        if (!logBasic())
-                        {
-                            LogToFile("Error Message\n:" + err.ToString());
-                        }
-
-                        this.Stop();
-                    }
+                    CreateDirectory(this.homepath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.homepath + ". Try checking the permissions of " + this.homepath + " and make sure that NETWORK SERVICE has been granted access.");
                 }
             }
             if (ConfigurationManager.AppSettings.Get("watchdirectory").Equals(""))
@@ -97,50 +88,16 @@ namespace CsvToSqlite
                 this.watchpath = "C:\\Users\\diego\\CsvToSqlite\\Convert";
                 if (!Directory.Exists(watchpath))
                 {
-                    try
-                    {
-                        Directory.CreateDirectory(watchpath);
-                    }
-                    catch (IOException err)
-                    {
-                        LogToFile(DateTime.Now +
-                                  " CRITICAL ERROR: An error occurred while creating the directory " +
-                                  this.watchpath + ". Try checking the permissions of " + this.homepath +
-                                  " and make sure that Network Service has been granted access.");
-                        if (!logBasic())
-                        {
-                            LogToFile("Error Message\n:" + err.ToString());
-                        }
-
-                        this.Stop();
-                    }
-
-
+                    CreateDirectory(this.watchpath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchpath + ". Try checking the permissions of " + this.watchpath + " and make sure that NETWORK SERVICE has been granted access.");
                 }
-                
+
             }
             else
             {
                 this.watchpath = ConfigurationManager.AppSettings.Get("watchdirectory");
                 if (!Directory.Exists(watchpath))
                 {
-                    try
-                    {
-                        Directory.CreateDirectory(watchpath);
-                    }
-                    catch (IOException err)
-                    {
-                        LogToFile(DateTime.Now +
-                                  " CRITICAL ERROR: An error occurred while creating the directory " +
-                                  this.watchpath + ". Try checking the permissions of " + this.homepath +
-                                  " and make sure that Network Service has been granted access.");
-                        if (!logBasic())
-                        {
-                            LogToFile("Error Message\n:" + err.ToString());
-                        }
-
-                        this.Stop();
-                    }
+                    CreateDirectory(this.watchpath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchpath + ". Try checking the permissions of " + this.watchpath + " and make sure that NETWORK SERVICE has been granted access.");
 
                 }
                 ConfigurationManager.AppSettings.Set("watchdirectory", watchpath);
@@ -163,8 +120,8 @@ namespace CsvToSqlite
             }
             if (ConfigurationManager.AppSettings.Get("databasePath").Equals(""))
             {
-                this.datapath = "C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db";
-                if (!File.Exists(datapath))  
+                this.datapath = "Data Source = C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;";
+                if (!File.Exists("C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db"))  
                 {
                     LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database path: " + datapath);
                     this.Stop();
@@ -177,7 +134,7 @@ namespace CsvToSqlite
                     LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database file " + ConfigurationManager.AppSettings.Get("databasePath") + ".");
                     this.Stop();
                 }
-                this.datapath = ConfigurationManager.AppSettings.Get("databasePath");
+                this.datapath = "Data Source = "+ConfigurationManager.AppSettings.Get("databasePath")+ ";";
             }
             if ((!ConfigurationManager.AppSettings.Get("logginglevel").Equals("basic")) && (!ConfigurationManager.AppSettings.Get("logginglevel").Equals("advanced")))
             {
@@ -196,34 +153,18 @@ namespace CsvToSqlite
             }
             catch (IOException err)
             {
-                LogToFile(DateTime.Now + " CRITICAL ERROR: Could not read "+this.parserConfigFile+". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
-                if (!logBasic())
-                {
-                    LogToFile("Error Message\n:" + err.ToString());
-                }
+                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: Could not read " + this.parserConfigFile + ". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
                 this.Stop();
             }
             catch (JsonException err)
             {
-                
-                LogToFile(DateTime.Now+" CRITICAL ERROR: An error occured while parsing "+this.parserConfigFile+". Please provide valid JSON. Quiting ...");
-                if (!logBasic())
-                {
-                    LogToFile("Error Message:\n"+ err.ToString());
-                }
+                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: An error occured while parsing " + this.parserConfigFile + ". Please provide valid JSON. Quiting ...");
                 this.Stop();
             }
             catch (System.UnauthorizedAccessException err)
             {
-                LogToFile(DateTime.Now + " CRITICAL ERROR: NETWORK SERVICE does not have permissions to access "+this.parserConfigFile+ ". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
-                if (!logBasic())
-                {
-                    LogToFile("Error Message:\n" + err.ToString());
-                }
-                this.Stop();
+                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: NETWORK SERVICE does not have permissions to access " + this.parserConfigFile + ". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
             }
-            
-
             if (!this.parserConfig.ContainsKey("columns"))
             {
                 LogToFile(DateTime.Now + " CRITICAL ERROR: Please include a 'columns' key in your parser config file. Quiting...");
@@ -289,7 +230,7 @@ namespace CsvToSqlite
 
             String filename = e.FullPath;
             String fileData = null;
-            String error = "";
+            Exception error = new Exception("");
             for (int i = 0; i < 10; i++)
             {
                 try
@@ -299,14 +240,12 @@ namespace CsvToSqlite
                 }
                 catch (IOException err)
                 {
-                    error = err.ToString();
+                    error = err;
                 }
             }
             if (fileData.Equals(null))
             {
-                LogToFile(DateTime.Now + " ERROR: Could not read file "+ filename + ". Please make sure it exists and NETWORK SERVICE has access to it.");
-                if (!logBasic())
-                    LogToFile("Error Message:\n" + error);
+                this.ShowErrors(error, DateTime.Now + " ERROR: Could not read file " + filename + ". Please make sure it exists and NETWORK SERVICE has access to it.");
                 return;
             }
             if (fileData.Equals(""))
@@ -358,10 +297,10 @@ namespace CsvToSqlite
             {
                 if (!columns.ContainsKey(headers[i]))
                 {
-                    LogToFile(DateTime.Now+" PARSE ERROR: Column " + headers[i] + " does not match any column defined in "+this.parserConfigFile);
+                    LogToFile(DateTime.Now+" PARSE ERROR: Column '" + headers[i] + "' does not match any column defined in "+this.parserConfigFile);
                     return;
                 }
-            }
+            }   
             
             String columnNames = "";
             for (int i = 0; i < headers.Count; i++)
@@ -374,84 +313,79 @@ namespace CsvToSqlite
                     columnNames += headers[i] + ",";
                 }
             }
-            for (int i = 0; i < data.Count; i++)
+            try
             {
-                String values = "";
-                Boolean skip = false;
-                for (int j = 0; i < data[i].Count; j++)
+                using (SQLiteConnection c = new SQLiteConnection(this.datapath))
                 {
-                    var column = JsonSerializer.Deserialize<Dictionary<String, String>>(columns[headers[j]].ToString());
-                    String format = (String)column["format"];
-                    String cell = data[i][j];
-                    LogToFile("Format:"+ format);
-                    if (!IsValid(cell, format))
+                    c.Open();
+                    for (int i = 0; i < data.Count; i++)
                     {
-                        if (this.stopOnError)
+                        String values = "";
+                        Boolean skip = false;
+                        for (int j = 0; j < data[i].Count; j++)
                         {
-                            LogToFile(DateTime.Now + " PARSE ERROR: Row " + i + " column " + j + ": Value '"+data[i][j]+"' does not match the format specified for column " + headers[j] + ". Stopping parser ...");
-                            return;
-                        }
-                        else
-                        {
-                            LogToFile(DateTime.Now + " PARSE ERROR: Row " + i + " column " + j + ": Value does not match the format specified for column " + headers[j] + ". Skipping ...");
-                            skip = true;
-                            values = "";
-                            break;
-                        }
+                            var column = JsonSerializer.Deserialize<Dictionary<String, String>>(columns[headers[j]].ToString());
+                            String format = (String)column["format"];
+                            String cell = data[i][j];
+                            if (!IsValid(cell, format))
+                            {
+                                if (this.stopOnError)
+                                {
+                                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + i + " column " + j + ": Value '"+data[i][j]+"' does not match the format specified for column " + headers[j] + ". Stopping parser ...");
+                                    c.Close();
+                                    return;
+                                }
+                                else
+                                {
+                                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + i + " column " + j + ": Value does not match the format specified for column " + headers[j] + ". Skipping ...");
+                                    skip = true;
+                                    values = "";
+                                    break;
+                                }
 
-                    }
-                    else
-                    {
-                        if (j == data[i].Count - 1)
-                        {
-                            values += "'" + data[i][j] + "'";
-                            break;
-                        }
-                        else
-                        {
-                            values += "'" + data[i][j] + "'" + ",";
-                        }
+                            }
+                            else
+                            {
+                                if (j == data[i].Count - 1)
+                                {
+                                    values += "'" + data[i][j] + "'";
+                                    break;
+                                }
+                                else
+                                {
+                                    values += "'" + data[i][j] + "'" + ",";
+                                }
 
 
                         
-                    }
-                }
-                if (skip || values.Equals(""))
-                {
-                    continue;
-                }
-                try
-                {
-                    using (SQLiteConnection c = new SQLiteConnection("Data Source=C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;"))
-                    {
-                        c.Open();
-                        String query = "INSERT INTO CsvToSqlite(" + columnNames + ") VALUES(" + values + ")";
-                        using (SQLiteCommand command = new SQLiteCommand(query, c))
-                        {
-                            command.ExecuteNonQuery();
-                            command.Dispose();
+                            }
                         }
-                        c.Close();
-                    }
+                        if (skip || values.Equals(""))
+                        {
+                            continue;
+                        }
+                
+                            String query = "INSERT INTO CsvToSqlite(" + columnNames + ") VALUES(" + values + ")";
+                            using (SQLiteCommand command = new SQLiteCommand(query, c))
+                            {
+                                command.ExecuteNonQuery();
+                                command.Dispose();
+                            }
+                        
+                        }
+                    c.Close();
                 }
-                catch (SQLiteException err)
-                {
-                    LogToFile(DateTime.Now + " PARSE ERROR: Could not add row to " + this.datapath + ". Error: "+err.Message+". Stopping Parser...");
-                    if (!logBasic())
-                    {
-                        LogToFile("Error Message:\n" + err.ToString());
-                    }
-                    return;
-                }
-
-
             }
-           
+            catch (SQLiteException err)
+            {
+                
+                ShowErrors(err, DateTime.Now + " PARSE ERROR: Could not add row to " + this.datapath + ". Error: " + err.Message + ". Stopping Parser...");
+                return;
+            }
         }
     
         protected override void OnStop()
         {
-            
             LogToFile(DateTime.Now + " CsvToSqlite service has stopped");
         }
         private static List<String> split(String format, char seperator)
@@ -508,8 +442,9 @@ namespace CsvToSqlite
         {
             Boolean isValid = false;
             List<String> formatSplit = split(formats, '|');
-            foreach (var format in formatSplit)
+            foreach (var formatRaw in formatSplit)
             {
+                String format = formatRaw.Trim();
                 if (format == "string")
                 {
                     isValid = true;
@@ -523,8 +458,6 @@ namespace CsvToSqlite
                         isValid = true;
                         break;
                     }
-
-
                 }
 
                 if (format == "decimal")
@@ -593,9 +526,11 @@ namespace CsvToSqlite
                         {
                             if (ranges[0].Equals('[') && ranges[ranges.Length - 1].Equals(']'))
                             {
-                                List<Char> parserd = ranges.Skip(1).ToList();
-                                parserd.RemoveAt(parserd.Count - 1);
-                                List<String> splitRanges = split(String.Join("", parserd), ',');
+                                List<Char> parsed = ranges.Skip(1).ToList();
+                                parsed.RemoveAt(parsed.Count - 1);
+                                List<String> splitRanges = split(String.Join("", parsed), ',');
+                                splitRanges[0] = splitRanges[0].Trim();
+                                splitRanges[1] = splitRanges[1].Trim();
                                 if (splitRanges.Count == 2)
                                 {
                                     long output = 0;
@@ -605,24 +540,9 @@ namespace CsvToSqlite
                                         {
                                             long lowerRange;
                                             long upperRange;
-                                            if (splitRanges[0].Equals("*"))
-                                            {
-                                                lowerRange = long.MaxValue;
-                                            }
-                                            else
-                                            {
-                                                lowerRange = long.Parse(splitRanges[0]);
-                                            }
-
-                                            if (splitRanges[1].Equals("*"))
-                                            {
-                                                upperRange = long.Parse(splitRanges[1]);
-                                            }
-                                            else
-                                            {
-                                                upperRange = long.Parse(splitRanges[1]);
-                                            }
-
+                                            long[] rangesArray = GetRanges(splitRanges);
+                                            lowerRange = rangesArray[0];
+                                            upperRange = rangesArray[1];
                                             if (value.Length <= upperRange && value.Length >= lowerRange)
                                             {
                                                 isValid = true;
@@ -648,10 +568,9 @@ namespace CsvToSqlite
                             {
                                 if (ranges[0].Equals('[') && ranges[ranges.Length - 1].Equals(']'))
                                 {
-                                    List<Char> parserd = ranges.Skip(1).ToList();
-                                    parserd.RemoveAt(parserd.Count - 1);
-                                    List<String> splitRanges = split(String.Join("", parserd), ',');
-
+                                    List<Char> parsed = ranges.Skip(1).ToList();
+                                    parsed.RemoveAt(parsed.Count - 1);
+                                    List<String> splitRanges = split(String.Join("", parsed), ',');
                                     if (splitRanges.Count == 2)
                                     {
                                         long output = 0;
@@ -661,23 +580,9 @@ namespace CsvToSqlite
                                             {
                                                 long lowerRange;
                                                 long upperRange;
-                                                if (splitRanges[0].Equals("*"))
-                                                {
-                                                    lowerRange = long.MaxValue;
-                                                }
-                                                else
-                                                {
-                                                    lowerRange = long.Parse(splitRanges[0]);
-                                                }
-
-                                                if (splitRanges[1].Equals("*"))
-                                                {
-                                                    upperRange = long.Parse(splitRanges[1]);
-                                                }
-                                                else
-                                                {
-                                                    upperRange = long.Parse(splitRanges[1]);
-                                                }
+                                                long[] rangesArray = GetRanges(splitRanges);
+                                                lowerRange = rangesArray[0];
+                                                upperRange = rangesArray[1];
 
                                                 if (long.Parse(value) <= upperRange && long.Parse(value) >= lowerRange)
                                                 {
@@ -701,6 +606,28 @@ namespace CsvToSqlite
 
             }
             return isValid;
+        }
+        private long[] GetRanges(List<String> rangesSplit)
+        {
+            long[] ranges = new long[2];
+            if (rangesSplit[0].Equals("*"))
+            {
+                ranges[0] = long.MaxValue;
+            }
+            else
+            {
+                ranges[0] = long.Parse(rangesSplit[0]);
+            }
+
+            if (rangesSplit[1].Equals("*"))
+            {
+                ranges[1] = long.Parse(rangesSplit[1]);
+            }
+            else
+            {
+                ranges[1] = long.Parse(rangesSplit[1]);
+            }
+            return ranges;
         }
         public void LogToFile(string Message)
         {
@@ -785,7 +712,7 @@ namespace CsvToSqlite
                 }
                 catch (Exception err)
                 {
-                   eventLog.WriteEntry("ERROR: An unexpected error occured while wriing the log file " + filepath + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                   eventLog.WriteEntry("ERROR: An unexpected error occured while writing the log file " + filepath + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
                 }
                 
             }
