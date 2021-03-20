@@ -11,10 +11,10 @@ namespace CsvToSqlite
     {
         public String filename;
         public String data;
-        public Parser(String filename)
+        public Parser(String filename, String data)
         {
             this.filename = filename;
-            this.data = File.ReadAllText(this.filename);
+            this.data = data;
         }
 
         public static Boolean hasDuplicate(List<String> headers)
@@ -54,7 +54,7 @@ namespace CsvToSqlite
             Boolean escaping = false;
             char quoteChar = ' ';
             Boolean quoting = false;
-            int lastCloseQuoteIndex = -2147483648;
+            int lastCloseQuoteIndex = int.MinValue;
             StringBuilder current = new StringBuilder();
             for (int i = 0; i < line.Length; i++)
             {
