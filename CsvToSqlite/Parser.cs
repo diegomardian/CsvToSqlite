@@ -36,7 +36,11 @@ namespace CsvToSqlite
                 List<String> data = ParseLine(line);
                 if (!(data.Count == 0))
                 {
-                    csvData.Add(data);
+                    if (!(data.Distinct().Count() == 1 && data.Distinct().ToList()[0].Equals("")))
+                    {
+                        csvData.Add(data);
+                    }
+                    
                 }
             }
             foreach (String header in csvData[0])
@@ -64,7 +68,7 @@ namespace CsvToSqlite
                     current.Append(c);
                     escaping = false;
                 }
-                else if (c == '\\' && !(quoting && quoteChar == '\''))
+                else if (c == '\\' && !(quoting && quoteChar == '"'))
                 {
                     escaping = true;
                 }
@@ -73,14 +77,14 @@ namespace CsvToSqlite
                     quoting = false;
                     lastCloseQuoteIndex = i;
                 }
-                else if (!quoting && (c == '\'' || c == '"'))
+                else if (!quoting && (c == '"'))
                 {
                     quoting = true;
                     quoteChar = c;
                 }
                 else if (!quoting && c.ToString().Equals(","))
                 {
-                    if (current.Length > 0 || lastCloseQuoteIndex == (i - 1))
+                    if (current.Length >= 0 || lastCloseQuoteIndex == (i - 1))
                     {
                         tokens.Add(current.ToString());
                         current = new StringBuilder();
@@ -91,7 +95,7 @@ namespace CsvToSqlite
                     current.Append(c);
                 }
             }
-            if (current.Length > 0 || lastCloseQuoteIndex == (line.Length - 1))
+            if (current.Length >= 0 || lastCloseQuoteIndex == (line.Length - 1))
             {
                 tokens.Add(current.ToString());
             }

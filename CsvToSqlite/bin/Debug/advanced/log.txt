@@ -1,0 +1,48 @@
+3/20/2021 8:38:43 AM CsvToSqlite service has started
+3/20/2021 9:44:20 AM CRITICAL ERROR: An error occured while parsing C:\Users\diego\CsvToSqlite\config.json. Please provide valid JSON. Quiting ...
+Error Message:
+System.Text.Json.JsonException: 'T' is an invalid start of a value. Path: $.columns | LineNumber: 7 | BytePositionInLine: 18. ---> System.Text.Json.JsonReaderException: 'T' is an invalid start of a value. LineNumber: 7 | BytePositionInLine: 18.
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.Utf8JsonReader.TrySkip()
+   at System.Text.Json.JsonDocument.TryParseValue(Utf8JsonReader& reader, JsonDocument& document, Boolean shouldThrow)
+   at System.Text.Json.Serialization.Converters.ObjectConverter.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.Converters.DictionaryDefaultConverter`3.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TCollection& value)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   --- End of inner exception stack trace ---
+   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadCore[TValue](JsonConverter jsonConverter, Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadCore[TValue](Utf8JsonReader& reader, Type returnType, JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.Deserialize[TValue](String json, Type returnType, JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.Deserialize[TValue](String json, JsonSerializerOptions options)
+   at CsvToSqlite.CsvToSqlite.OnStart(String[] args) in Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\Service1.cs:line 254
+3/20/2021 9:44:20 AM CsvToSqlite service has stopped
+3/20/2021 9:52:48 AM CRITICAL ERROR: An error occured while parsing C:\Users\diego\CsvToSqlite\config.json. Please provide valid JSON. Quiting ...
+Error Message:
+System.Text.Json.JsonException: 'T' is an invalid start of a value. Path: $.columns | LineNumber: 7 | BytePositionInLine: 18. ---> System.Text.Json.JsonReaderException: 'T' is an invalid start of a value. LineNumber: 7 | BytePositionInLine: 18.
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.Utf8JsonReader.TrySkip()
+   at System.Text.Json.JsonDocument.TryParseValue(Utf8JsonReader& reader, JsonDocument& document, Boolean shouldThrow)
+   at System.Text.Json.Serialization.Converters.ObjectConverter.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.Converters.DictionaryDefaultConverter`3.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TCollection& value)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   --- End of inner exception stack trace ---
+   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadCore[TValue](JsonConverter jsonConverter, Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadCore[TValue](Utf8JsonReader& reader, Type returnType, JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.Deserialize[TValue](String json, Type returnType, JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.Deserialize[TValue](String json, JsonSerializerOptions options)
+   at CsvToSqlite.CsvToSqlite.OnStart(String[] args) in Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\Service1.cs:line 254
+3/20/2021 10:21:22 AM CsvToSqlite service has started
+3/20/2021 11:09:19 AM PARSE ERROR: Found 10 columns in the header of C:\Users\diego\CsvToSqlite\Convert\Copy of 1000 Sales Records - 9 col.csv but it should have 8 columns. Stopped parsing C:\Users\diego\CsvToSqlite\Convert\Copy of 1000 Sales Records - 9 col.csv.
+3/20/2021 11:10:19 AM CsvToSqlite service has started
+3/20/2021 11:10:24 AM PARSE ERROR: Found 10 columns in the header of C:\Users\diego\CsvToSqlite\Convert\Copy of 1000 Sales Records - 9 col.csv but it should have 9 columns. Stopped parsing C:\Users\diego\CsvToSqlite\Convert\Copy of 1000 Sales Records - 9 col.csv.

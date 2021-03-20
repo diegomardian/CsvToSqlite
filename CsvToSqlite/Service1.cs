@@ -18,15 +18,15 @@ namespace CsvToSqlite
 {
     public partial class CsvToSqlite : ServiceBase
     {
-        private String homepath;
-        private String watchpath;
-        private String datapath;
+        private String homeDirectory;
+        private String watchDirectory;
+        private String databaseFile;
         private String parserConfigFile;
-        private String loggingLevel;
         private String loggingDirectory;
+        private String tableName;
+        public String loggingLevel;
         private Dictionary<String, Object> parserConfig;
         private FileSystemWatcher watcher;
-        private String connString;
         private bool stopOnError;
         private EventLog eventLog;
 
@@ -34,6 +34,7 @@ namespace CsvToSqlite
         {
             eventLog = new System.Diagnostics.EventLog();
             eventLog.Source = "CsvToSqlite";
+            loggingLevel = "advanced";
             InitializeComponent();
 
 
@@ -61,56 +62,54 @@ namespace CsvToSqlite
             }
         }
 
-
+        private void CheckKey(String key)
+        {
+            if (ConfigurationManager.AppSettings.Get(key) is null)
+            {
+                LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find key '"+ key + "'. Quiting ...");
+                this.Stop();
+            }
+        }
         protected override void OnStart(string[] args)
         {
             this.loggingDirectory = "";
-            if (ConfigurationManager.AppSettings.Get("homepath").Equals(""))
-            {
-                LogToFile("INFO: Config file paramater 'homepath' not set. Setting to C:\\Users\\diego\\CsvToSqlite");
-                this.homepath = "C:\\Users\\diego\\CsvToSqlite";
-                if (!Directory.Exists(homepath))
-                {
-                    CreateDirectory(this.homepath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.homepath + ". Try checking the permissions of " + this.homepath + " and make sure that NETWORK SERVICE has been granted access.");
-                }
-            }
-            else
-            {
-                this.homepath = ConfigurationManager.AppSettings.Get("homepath");
-                if (!Directory.Exists(homepath))
-                {
-                    CreateDirectory(this.homepath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.homepath + ". Try checking the permissions of " + this.homepath + " and make sure that NETWORK SERVICE has been granted access.");
-                }
-            }
+            CheckKey("watchdirectory");
+            CheckKey("parserconfigfile");
+            CheckKey("logdirectory");
+            CheckKey("tablename");
+            CheckKey("logginglevel");
+            CheckKey("databasepath");
+
+            
             if (ConfigurationManager.AppSettings.Get("watchdirectory").Equals(""))
             {
                 LogToFile("INFO: Config file paramater 'watchdirectory' not set. Setting to C:\\Users\\diego\\CsvToSqlite\\Convert");
-                this.watchpath = "C:\\Users\\diego\\CsvToSqlite\\Convert";
-                if (!Directory.Exists(watchpath))
+                this.watchDirectory = "C:\\Users\\diego\\CsvToSqlite\\Convert";
+                if (!Directory.Exists(watchDirectory))
                 {
-                    CreateDirectory(this.watchpath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchpath + ". Try checking the permissions of " + this.watchpath + " and make sure that NETWORK SERVICE has been granted access.");
+                    CreateDirectory(this.watchDirectory, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchDirectory + ". Try checking the permissions of " + this.watchDirectory + " and make sure that NETWORK SERVICE has been granted access.");
                 }
 
             }
             else
             {
-                this.watchpath = ConfigurationManager.AppSettings.Get("watchdirectory");
-                if (!Directory.Exists(watchpath))
+                this.watchDirectory = ConfigurationManager.AppSettings.Get("watchdirectory");
+                if (!Directory.Exists(watchDirectory))
                 {
-                    CreateDirectory(this.watchpath, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchpath + ". Try checking the permissions of " + this.watchpath + " and make sure that NETWORK SERVICE has been granted access.");
+                    CreateDirectory(this.watchDirectory, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchDirectory + ". Try checking the permissions of " + this.watchDirectory + " and make sure that NETWORK SERVICE has been granted access.");
 
                 }
-                ConfigurationManager.AppSettings.Set("watchdirectory", watchpath);
+                ConfigurationManager.AppSettings.Set("watchdirectory", watchDirectory);
 
             }
-            if (ConfigurationManager.AppSettings.Get("parserConfigFile").Equals(""))
+            if (ConfigurationManager.AppSettings.Get("parserconfigfile").Equals(""))
             {
-                LogToFile(DateTime.Now + " CRITICAL ERROR: Config file paramater 'parserConfigFile' not set. Quiting ...");
+                LogToFile(DateTime.Now + " CRITICAL ERROR: Config file paramater 'parserconfigfile' not set. Quiting ...");
                 this.Stop();
             }
             else
             {
-                this.parserConfigFile = ConfigurationManager.AppSettings.Get("parserConfigFile");
+                this.parserConfigFile = ConfigurationManager.AppSettings.Get("parserconfigfile");
                 if (!File.Exists(this.parserConfigFile))
                 {
                     LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find file " + this.parserConfigFile+". Quiting ...");
@@ -118,33 +117,118 @@ namespace CsvToSqlite
                 }
 
             }
-            if (ConfigurationManager.AppSettings.Get("databasePath").Equals(""))
+            if (ConfigurationManager.AppSettings.Get("databasepath").Equals(""))
             {
-                this.datapath = "Data Source = C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;";
+                this.databaseFile = "Data Source = C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db;";
                 if (!File.Exists("C:\\Users\\diego\\CsvToSqlite\\CsvToSqlite.db"))  
                 {
-                    LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database path: " + datapath);
+                    LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database path: " + databaseFile);
                     this.Stop();
                 }
             }
             else
             {
-                if (!File.Exists(ConfigurationManager.AppSettings.Get("databasePath")))
+                if (!File.Exists(ConfigurationManager.AppSettings.Get("databasepath")))
                 {
-                    LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database file " + ConfigurationManager.AppSettings.Get("databasePath") + ".");
+                    LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find database file " + ConfigurationManager.AppSettings.Get("databasepath") + ".");
                     this.Stop();
                 }
-                this.datapath = "Data Source = "+ConfigurationManager.AppSettings.Get("databasePath")+ ";";
+                this.databaseFile = "Data Source = "+ConfigurationManager.AppSettings.Get("databasepath")+ ";";
+            }
+            if (ConfigurationManager.AppSettings.Get("tablename").Equals(""))
+            {
+                LogToFile("INFO: Config file paramater 'tablename' not set. Setting to CsvToSqlite");
+                this.tableName = "CsvToSqlite";
+                try
+                {
+                    using (SQLiteConnection c = new SQLiteConnection(this.databaseFile))
+                    {
+                        c.Open();
+                        bool isTable = false;
+                        SQLiteCommand command = new SQLiteCommand(c);
+                        command.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '" + this.tableName + "';";
+                        SQLiteDataReader reader = command.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            if (reader[0].Equals(this.tableName))
+                            {
+                                isTable = true;
+                            }
+                        }
+
+                        reader.Close();
+                        reader.Dispose();
+                        command.Dispose();
+                        if (!isTable)
+                        {
+                            LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find table " + this.tableName + " in database " + this.databaseFile);
+                        }
+                        c.Close();
+
+                    }
+                }
+                catch (SQLiteException err)
+                {
+                    this.ShowErrors(err, DateTime.Now + " CRITICAL ERROR: An unexpected error occured while checking the if the table '" + this.tableName + "' exists. Quiting ...");
+                    this.Stop();
+                }
+
+
+            }
+            else
+            {
+                try
+                {
+                    this.tableName = ConfigurationManager.AppSettings.Get("tableName");
+                    using (SQLiteConnection c = new SQLiteConnection(this.databaseFile))
+                    {
+                        c.Open();
+                        bool isTable = false;
+                        SQLiteCommand command = new SQLiteCommand(c);
+                        command.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '" + this.tableName + "';";
+                        SQLiteDataReader reader = command.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            if (reader[0].Equals(this.tableName))
+                            {
+                                isTable = true;
+                            }
+                        }
+
+                        reader.Close();
+                        reader.Dispose();
+                        command.Dispose();
+                        if (!isTable)
+                        {
+                            LogToFile(DateTime.Now + " CRITICAL ERROR: Could not find table " + this.tableName + " in database " + this.databaseFile);
+                        }
+                        c.Close();
+
+                    }
+                }
+                catch (SQLiteException err)
+                {
+                    this.ShowErrors(err, DateTime.Now + " CRITICAL ERROR: An unexpected error occured while checking the if the table '" + this.tableName + "' exists. Quiting ...");
+                    this.Stop();
+                }
             }
             if ((!ConfigurationManager.AppSettings.Get("logginglevel").Equals("basic")) && (!ConfigurationManager.AppSettings.Get("logginglevel").Equals("advanced")))
             {
                 LogToFile(DateTime.Now + " ERROR: Could not parse App.config key \'logginglevel\', value must be set to \'basic\' or \'advanced\'. Setting logginglevel to \'basic\'");
-                ConfigurationManager.AppSettings.Set("logginglevel", "basic");
-                this.loggingLevel = ConfigurationManager.AppSettings.Get("logginglevel");
+                this.loggingLevel = "basic";
             }
             else
             {
-                this.loggingLevel = ConfigurationManager.AppSettings.Get("logginglevel");
+                if (ConfigurationManager.AppSettings.Get("logginglevel").Equals("basic"))
+                {
+                    this.loggingLevel = "basic";
+                }
+                else if (ConfigurationManager.AppSettings.Get("logginglevel").Equals("advanced"))
+                {
+                    this.loggingLevel = "advanced";
+                }
             }
             
             try { 
@@ -196,7 +280,7 @@ namespace CsvToSqlite
             }
 
 
-            this.watcher = new FileSystemWatcher(this.watchpath, "*.*");
+            this.watcher = new FileSystemWatcher(this.watchDirectory, "*.*");
             watcher.Created += OnCreated;
             watcher.EnableRaisingEvents = true;
             LogToFile(DateTime.Now + " CsvToSqlite service has started");
@@ -206,7 +290,7 @@ namespace CsvToSqlite
         }
         private Boolean logBasic()
         {
-            if (ConfigurationManager.AppSettings.Get("logginglevel").Equals("basic"))
+            if (this.loggingLevel.Equals("basic"))
             {
                 return true;
             }
@@ -282,14 +366,14 @@ namespace CsvToSqlite
             }
             if (!(headers.Count == columns.Count))
             {
-                LogToFile(DateTime.Now + " PARSE ERROR: Found " + headers.Count + " columns in the header of "+filename+" but it should have " + columns.Count + " columns. Stopped parsing " + filename + ".");
+                LogToFile(DateTime.Now + " PARSE ERROR: Found " + headers.Count + " columns in the header of '"+filename+"' but it should have " + columns.Count + " columns. Stopped parsing '" + filename + "'.");
                 return;
             }
             for (int i = 0; i < data.Count; i++)
             {
                 if (!(data[i].Count == headers.Count))
                 {
-                    LogToFile(DateTime.Now + " PARSE ERROR: Row  " + i + " has "+ data[i].Count + " columns while it should have "+ columns.Count + " columns. Stopped parsing "+filename+".");
+                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + (i+2) + " has "+ data[i].Count + " columns while it should have "+ columns.Count + " columns. Stopped parsing '"+filename+"'.");
                     return;
                 }
             }
@@ -297,7 +381,7 @@ namespace CsvToSqlite
             {
                 if (!columns.ContainsKey(headers[i]))
                 {
-                    LogToFile(DateTime.Now+" PARSE ERROR: Column '" + headers[i] + "' does not match any column defined in "+this.parserConfigFile);
+                    LogToFile(DateTime.Now+" PARSE ERROR: Column '" + headers[i] + "' does not match any column defined in '"+this.parserConfigFile+"'");
                     return;
                 }
             }   
@@ -307,15 +391,15 @@ namespace CsvToSqlite
             {
                 if (i == headers.Count-1)  
                 {
-                    columnNames += headers[i];
+                    columnNames += "'"+headers[i].Replace("'", "''")+ "'";
                 }
                 else { 
-                    columnNames += headers[i] + ",";
+                    columnNames += "'"+headers[i].Replace("'", "''") + "'" + ",";
                 }
             }
             try
             {
-                using (SQLiteConnection c = new SQLiteConnection(this.datapath))
+                using (SQLiteConnection c = new SQLiteConnection(this.databaseFile))
                 {
                     c.Open();
                     for (int i = 0; i < data.Count; i++)
@@ -325,19 +409,33 @@ namespace CsvToSqlite
                         for (int j = 0; j < data[i].Count; j++)
                         {
                             var column = JsonSerializer.Deserialize<Dictionary<String, String>>(columns[headers[j]].ToString());
-                            String format = (String)column["format"];
+                            if (!column.ContainsKey("format"))
+                            {
+                                LogToFile(DateTime.Now + " PARSE ERROR: Could not find key 'format'" + " for column " + headers[j] + ". Please check "+this.parserConfigFile+". Stopping parser ...");
+                                c.Close();
+                                return;
+                            }
+                            String format = column["format"].ToString();
                             String cell = data[i][j];
-                            if (!IsValid(cell, format))
+                            bool notempty = false;
+                            if (column.ContainsKey("notEmpty") && cell.Equals(""))
+                            {
+                                if (column["notEmpty"].ToString().ToLower().Equals("true"))
+                                {
+                                    notempty = true;
+                                }
+                            }
+                            if (!IsValid(cell, format, notempty))
                             {
                                 if (this.stopOnError)
                                 {
-                                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + i + " column " + j + ": Value '"+data[i][j]+"' does not match the format specified for column " + headers[j] + ". Stopping parser ...");
+                                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + (i+2) + " column " + j + ": Value '"+data[i][j]+"' does not match the format specified for column " + headers[j] + ". Stopping parser ...");
                                     c.Close();
                                     return;
                                 }
                                 else
                                 {
-                                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + i + " column " + j + ": Value does not match the format specified for column " + headers[j] + ". Skipping ...");
+                                    LogToFile(DateTime.Now + " PARSE ERROR: Row " + (i +2) + " column " + j + ": Value does not match the format specified for column " + headers[j] + ". Skipping ...");
                                     skip = true;
                                     values = "";
                                     break;
@@ -346,14 +444,36 @@ namespace CsvToSqlite
                             }
                             else
                             {
+                                if (column.ContainsKey("notEmpty") && cell.Equals(""))
+                                {
+                                    if (column["notEmpty"].ToString().ToLower().Equals("true"))
+                                    {
+                                        if (this.stopOnError)
+                                        {
+                                            LogToFile(DateTime.Now + " PARSE ERROR: Row " + (i+2) + " column " + j + ": Value for " + headers[j] + " cannot be empty. Skipping ...");
+                                            break;
+                                            c.Close();
+                                            return;
+                                        }
+                                        else
+                                        {
+                                            LogToFile(DateTime.Now + " PARSE ERROR: Row " + (i+2) + " column " + j + ": Value for " + headers[j] + " cannot be empty. Skipping ...");
+                                            skip = true;
+                                            values = "";
+                                            break;
+                                        }
+                                    }
+                                    
+                                    
+                                }
                                 if (j == data[i].Count - 1)
                                 {
-                                    values += "'" + data[i][j] + "'";
+                                    values += "'" + data[i][j].Replace("'", "''") + "'";
                                     break;
                                 }
                                 else
                                 {
-                                    values += "'" + data[i][j] + "'" + ",";
+                                    values += "'" + data[i][j].Replace("'", "''") + "'" + ",";
                                 }
 
 
@@ -365,21 +485,22 @@ namespace CsvToSqlite
                             continue;
                         }
                 
-                            String query = "INSERT INTO CsvToSqlite(" + columnNames + ") VALUES(" + values + ")";
-                            using (SQLiteCommand command = new SQLiteCommand(query, c))
-                            {
-                                command.ExecuteNonQuery();
-                                command.Dispose();
-                            }
-                        
+                        String query = "INSERT INTO "+tableName+"(" + columnNames + ") VALUES(" + values + ")";
+                        LogToFile(query);
+                        using (SQLiteCommand command = new SQLiteCommand(query, c))
+                        {
+                            command.ExecuteNonQuery();
+                            command.Dispose();
                         }
+                        
+                    }
                     c.Close();
                 }
             }
             catch (SQLiteException err)
             {
                 
-                ShowErrors(err, DateTime.Now + " PARSE ERROR: Could not add row to " + this.datapath + ". Error: " + err.Message + ". Stopping Parser...");
+                ShowErrors(err, DateTime.Now + " PARSE ERROR: Could not add row to " + this.databaseFile + ". Error: " + err.Message + ". Stopping Parser...");
                 return;
             }
         }
@@ -438,8 +559,19 @@ namespace CsvToSqlite
             return tokens;
         }
 
-        private Boolean IsValid(String value, String formats)
+        private Boolean IsValid(String value, String formats, bool notempty)
         {
+            if (value.Equals(""))
+            {
+                if (notempty)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
             Boolean isValid = false;
             List<String> formatSplit = split(formats, '|');
             foreach (var formatRaw in formatSplit)
@@ -633,9 +765,9 @@ namespace CsvToSqlite
         {
             if (this.loggingDirectory.Equals(""))
             {
-                if (ConfigurationManager.AppSettings.Get("logDirectory").Equals("") && this.loggingDirectory.Equals(""))
+                if (ConfigurationManager.AppSettings.Get("logdirectory").Equals("") && this.loggingDirectory.Equals(""))
                 {
-                    eventLog.WriteEntry("INFO: Config file 'logDirectory' is not set. Setting to C:\\Users\\diego\\CsvToSqlite\\Logs");
+                    eventLog.WriteEntry("INFO: Config file 'logdirectory' is not set. Setting to C:\\Users\\diego\\CsvToSqlite\\Logs");
                     this.loggingDirectory = "C:\\Users\\diego\\CsvToSqlite\\Logs";
                     if (!Directory.Exists(loggingDirectory))
                     {
@@ -655,7 +787,7 @@ namespace CsvToSqlite
                 }
                 else
                 {
-                    this.loggingDirectory = ConfigurationManager.AppSettings.Get("loggingDirectory");
+                    this.loggingDirectory = ConfigurationManager.AppSettings.Get("logdirectory");
                     if (!Directory.Exists(loggingDirectory))
                     {
                         eventLog.WriteEntry("INFO: Could not find log directory "+this.loggingDirectory+". Attempting to create it.");
@@ -665,7 +797,7 @@ namespace CsvToSqlite
                         }
                         catch (Exception err)
                         {
-                            eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                            eventLog.WriteEntry("CRITICAL ERROR: An unexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
                             this.Stop();
                         }
 
