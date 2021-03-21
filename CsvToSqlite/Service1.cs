@@ -87,7 +87,7 @@ namespace CsvToSqlite
                 this.watchDirectory = "C:\\Users\\diego\\CsvToSqlite\\Convert";
                 if (!Directory.Exists(watchDirectory))
                 {
-                    CreateDirectory(this.watchDirectory, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchDirectory + ". Try checking the permissions of " + this.watchDirectory + " and make sure that NETWORK SERVICE has been granted access.");
+                    CreateDirectory(this.watchDirectory, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchDirectory + ". Try checking the permissions of " + this.watchDirectory + " and make sure that Local System has been granted access.");
                 }
 
             }
@@ -96,7 +96,7 @@ namespace CsvToSqlite
                 this.watchDirectory = ConfigurationManager.AppSettings.Get("watchdirectory");
                 if (!Directory.Exists(watchDirectory))
                 {
-                    CreateDirectory(this.watchDirectory, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchDirectory + ". Try checking the permissions of " + this.watchDirectory + " and make sure that NETWORK SERVICE has been granted access.");
+                    CreateDirectory(this.watchDirectory, DateTime.Now + " CRITICAL ERROR: An error occurred while creating the directory " + this.watchDirectory + ". Try checking the permissions of " + this.watchDirectory + " and make sure that Local System has been granted access.");
 
                 }
                 ConfigurationManager.AppSettings.Set("watchdirectory", watchDirectory);
@@ -237,7 +237,7 @@ namespace CsvToSqlite
             }
             catch (IOException err)
             {
-                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: Could not read " + this.parserConfigFile + ". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
+                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: Could not read " + this.parserConfigFile + ". Please make sure the file exists and Local System has access to it. Quiting ...");
                 this.Stop();
             }
             catch (JsonException err)
@@ -247,7 +247,7 @@ namespace CsvToSqlite
             }
             catch (System.UnauthorizedAccessException err)
             {
-                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: NETWORK SERVICE does not have permissions to access " + this.parserConfigFile + ". Please make sure the file exists and NETWORK SERVICE has access to it. Quiting ...");
+                ShowErrors(err, DateTime.Now + " CRITICAL ERROR: Local System does not have permissions to access " + this.parserConfigFile + ". Please make sure the file exists and Local System has access to it. Quiting ...");
             }
             if (!this.parserConfig.ContainsKey("columns"))
             {
@@ -329,7 +329,7 @@ namespace CsvToSqlite
             }
             if (fileData.Equals(null))
             {
-                this.ShowErrors(error, DateTime.Now + " ERROR: Could not read file " + filename + ". Please make sure it exists and NETWORK SERVICE has access to it.");
+                this.ShowErrors(error, DateTime.Now + " ERROR: Could not read file " + filename + ". Please make sure it exists and Local System has access to it.");
                 return;
             }
             if (fileData.Equals(""))
@@ -775,9 +775,14 @@ namespace CsvToSqlite
                         {
                             Directory.CreateDirectory(loggingDirectory);
                         }
-                        catch (Exception err)
+                        catch (System.UnauthorizedAccessException err)
                         {
-                            eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the defualt log directory "+ "C:\\Users\\diego\\CsvToSqlite\\Logs" + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                            eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the defualt log directory "+ "C:\\Users\\diego\\CsvToSqlite\\Logs" + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
+                            this.Stop();
+                        }
+                        catch (IOException err)
+                        {
+                            eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the defualt log directory " + "C:\\Users\\diego\\CsvToSqlite\\Logs" + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
                             this.Stop();
                         }
 
@@ -795,12 +800,16 @@ namespace CsvToSqlite
                         {
                             Directory.CreateDirectory(loggingDirectory);
                         }
-                        catch (Exception err)
+                        catch (UnauthorizedAccessException err)
                         {
-                            eventLog.WriteEntry("CRITICAL ERROR: An unexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                            eventLog.WriteEntry("CRITICAL ERROR: An unexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
                             this.Stop();
                         }
-
+                        catch (IOException err)
+                        {
+                            eventLog.WriteEntry("CRITICAL ERROR: An unexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
+                            this.Stop();
+                        }
                     }
 
                 }
@@ -812,12 +821,17 @@ namespace CsvToSqlite
                 {
                     Directory.CreateDirectory(loggingDirectory);
                 }
-                catch (Exception err)
+                catch (UnauthorizedAccessException err)
                 {
-                    eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                    eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
                     this.Stop();
                 }
-                
+                catch (IOException err)
+                {
+                    eventLog.WriteEntry("CRITICAL ERROR: An upexpected error occured while creating the log directory " + this.loggingDirectory + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
+                    this.Stop();
+                }
+
             }
             string filepath = this.loggingDirectory + "\\log.txt";
             if (!File.Exists(filepath))
@@ -827,9 +841,13 @@ namespace CsvToSqlite
                     try { 
                         sw.WriteLine(Message);
                     }
-                    catch (Exception err)
+                    catch (UnauthorizedAccessException err)
                     {
-                        eventLog.WriteEntry("ERROR: An unexpected error occured while creating the log file " + filepath + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                        eventLog.WriteEntry("ERROR: An unexpected error occured while creating the log file " + filepath + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
+                    }
+                    catch (IOException err)
+                    {
+                        eventLog.WriteEntry("ERROR: An unexpected error occured while creating the log file " + filepath + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
                     }
                 }
             }
@@ -842,11 +860,15 @@ namespace CsvToSqlite
                         sw.WriteLine(Message);
                     }
                 }
-                catch (Exception err)
+                catch (UnauthorizedAccessException err)
                 {
-                   eventLog.WriteEntry("ERROR: An unexpected error occured while writing the log file " + filepath + ". Please make sure the path exists and NETWORK SERVICE has permissions to access it.\nError Message:\n" + err.ToString());
+                   eventLog.WriteEntry("ERROR: An unexpected error occured while writing the log file " + filepath + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
                 }
-                
+                catch (IOException err)
+                {
+                    eventLog.WriteEntry("ERROR: An unexpected error occured while writing the log file " + filepath + ". Please make sure the path exists and Local System has permissions to access it.\nError Message:\n" + err.ToString());
+                }
+
             }
         }
     }
