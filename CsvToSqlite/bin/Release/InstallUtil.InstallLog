@@ -1358,3 +1358,54 @@ The file is located at Z:\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\
 The Commit phase completed successfully.
 
 The transacted install has completed.
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe assembly's progress.
+The file is located at C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog.
+
+An exception occurred during the Install phase.
+System.ComponentModel.Win32Exception: The specified service has been marked for deletion
+
+The Rollback phase of the installation is beginning.
+See the contents of the log file for the C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe assembly's progress.
+The file is located at C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog.
+
+The Rollback phase completed successfully.
+
+The transacted install has completed.
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe assembly's progress.
+The file is located at C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog.
+
+An exception occurred during the Install phase.
+System.ComponentModel.Win32Exception: The specified service has been marked for deletion
+
+The Rollback phase of the installation is beginning.
+See the contents of the log file for the C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe assembly's progress.
+The file is located at C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog.
+
+The Rollback phase completed successfully.
+
+The transacted install has completed.
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe assembly's progress.
+The file is located at C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog.
+
+An exception occurred during the Install phase.
+System.ComponentModel.Win32Exception: The specified service has been marked for deletion
+
+The Rollback phase of the installation is beginning.
+See the contents of the log file for the C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.exe assembly's progress.
+The file is located at C:\Users\diego\Sync\coding\github\CsvToSqlite\CsvToSqlite\CsvToSqlite\bin\Release\CsvToSqlite.InstallLog.
+
+The Rollback phase completed successfully.
+
+The transacted install has completed.
